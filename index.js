@@ -1,7 +1,8 @@
 const express = require('express')
-const cors = require('cors')
 const dotenv = require('dotenv')
+const cors = require('cors')
 const userRoutes = require('./routes/userRoutes.js')
+const recordRoutes = require('./routes/recordRoutes.js')
 
 dotenv.config()
 const app = express()
