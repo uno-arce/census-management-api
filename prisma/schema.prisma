@@ -22,13 +22,19 @@ model Records {
   blkLotStr    String
   sudbZnPrk    String
   birthPlace   String
-  birthDate    DateTime
+  birthDate    DateTime  
   sex          String
   civilStatus  String
   citizenship  String
   occupation   String
 
+  status       String    @default("CREATED")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
   // Relation
   author       User      @relation(fields: [authorId], references: [id])
-  authorId     Int       
+  authorId     Int
+
+  @@unique([firstName, lastName, birthDate])       
 }
