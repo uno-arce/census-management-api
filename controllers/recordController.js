@@ -7,7 +7,7 @@ module.exports.createRecords = async (req, res) => {
         const recordsWithAuthor = req.body.records.map(record => {
         	const { id, authorId, createdAt, ...safeBody } = record
             return {
-            	...record,
+            	...safeBody,
             	authorId: userId,
             	birthDate: new Date(record.birthDate) 
             }
@@ -38,19 +38,26 @@ module.exports.createRecords = async (req, res) => {
 module.exports.getRecords = async (req, res) => {
 	try {
 		const userId = req.user.id
+		const { rows, group, sortColumn = 'updatedAt', order = 'desc', searchColumn, search } = req.query
 
 		const records = await prisma.records.findMany({
+			skip: rows * (group - 1),
+			take: Number(rows),
 			where: {
 				authorId: userId,
-				NOT: { status: "DELETED" }
+				NOT: { status: "DELETED" },
+				[searchColumn]: {
+					contains: search,
+					mode: 'insensitive'
+				}
 			},
 			orderBy: {
-				updatedAt: 'desc'
+				[sortColumn]: order
 			}
 		})
 
 		if(records.length === 0) {
-			return res.status(400).send({ error: 'No records found' })
+			return res.status(200).send([])
 		}
 
 		return res.status(200).send(records)
@@ -132,5 +139,23 @@ module.exports.deleteRecords = async (req, res) => {
 	} catch (error) {
 		console.log(error)
 		return res.status(500).send({ message: 'Failed to delete record'})
+	}
+}
+
+module.exports.getTotalRecords = async (req, res) => {
+	try {
+		const userId = req.user.id
+
+		const totalRecords = await prisma.records.count({
+			where: { 
+				authorId: userId,
+				NOT: { status: 'DELETED' }
+			}
+		})
+
+		return res.status(200).send({ total: totalRecords })
+	} catch(error) {
+		console.log(error)
+		return res.status(500).send({ message: 'Failed to count records' })
 	}
 }
