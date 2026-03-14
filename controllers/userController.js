@@ -133,7 +133,7 @@ module.exports.getUserHistory = async (req, res) => {
 		})
 
 		if(userData.history.length === 0) {
-			return res.status(400).send({ error: 'User history is empty' })
+			return res.status(200).send([])
 		}
 
 
