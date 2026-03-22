@@ -1,3 +1,5 @@
 node_modules
 .env
 /generated/prisma
+seedData.js
+census_seed.csv
