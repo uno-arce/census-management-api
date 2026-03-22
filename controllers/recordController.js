@@ -36,34 +36,53 @@ module.exports.createRecords = async (req, res) => {
 }
 
 module.exports.getRecords = async (req, res) => {
-	try {
-		const userId = req.user.id
-		const { rows, group, sortColumn = 'updatedAt', order = 'desc', searchColumn, search } = req.query
+    try {
+        const userId = req.user.id
+        const { rows, group, sortColumn = 'updatedAt', order = 'desc', searchColumn, search } = req.query
 
-		const records = await prisma.records.findMany({
-			skip: rows * (group - 1),
-			take: Number(rows),
-			where: {
-				authorId: userId,
-				NOT: { status: "DELETED" },
-				[searchColumn]: {
-					contains: search,
-					mode: 'insensitive'
-				}
-			},
-			orderBy: {
-				[sortColumn]: order
-			}
-		})
+        let searchFilter = {}
+        
+        if (search && searchColumn) {
+            if (searchColumn === 'birthDate') {
+                const year = parseInt(search);
+                if (!isNaN(year) && search.length === 4) {
+                    searchFilter = {
+                        gte: new Date(`${year}-01-01`),
+                        lte: new Date(`${year}-12-31`)
+                    }
+                } else {
+                    const date = new Date(search);
+                    if (!isNaN(date.getTime())) {
+                        searchFilter = { equals: date }
+                    }
+                }
+            } else {
+                searchFilter = {
+                    contains: search,
+                    mode: 'insensitive'
+                }
+            }
+        }
 
-		if(records.length === 0) {
-			return res.status(200).send([])
-		}
+        const records = await prisma.records.findMany({
+            skip: Number(rows) * (Number(group) - 1),
+            take: Number(rows),
+            where: {
+                authorId: userId,
+                NOT: { status: "DELETED" },
+                ...(search && searchColumn ? { [searchColumn]: searchFilter } : {})
+            },
+            orderBy: {
+                [sortColumn]: order
+            }
+        })
 
-		return res.status(200).send(records)
-	} catch (err) {
-		return res.status(500).send({ error: 'Error getting records' })
-	}
+        return res.status(200).send(records)
+
+    } catch (err) {
+        console.error(err)
+        return res.status(500).send({ error: 'Error getting records' })
+    }
 }
 
 module.exports.updateRecord = async (req, res) => {
