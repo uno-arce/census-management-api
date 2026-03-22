@@ -122,24 +122,46 @@ module.exports.changePassword = async (req, res) => {
 }
 
 module.exports.getUserHistory = async (req, res) => {
-	try {
-		const userId = req.user.id
+    try {
+        const userId = req.user.id
+        const { rows, group, sortColumn = 'updatedAt', order = 'desc', searchColumn, search } = req.query
 
-		const userData = await prisma.user.findUnique({
-			where: { id: userId },
-			include: {
-				history: true
-			}
-		})
+        const whereFilter = {
+            authorId: userId,
+            ...(search && searchColumn ? {
+                [searchColumn]: { contains: search, mode: 'insensitive' }
+            } : {})
+        }
 
-		if(userData.history.length === 0) {
-			return res.status(200).send([])
-		}
+        const [historyData, totalCount] = await Promise.all([
+            prisma.records.findMany({
+                where: whereFilter,
+                skip: rows && group ? Number(rows) * (Number(group) - 1) : undefined,
+                take: rows ? Number(rows) : undefined,
+                select: {
+                    status: true,
+                    updatedAt: true,
+                    lastName: true,
+                    firstName: true
+                },
+                orderBy: { [sortColumn]: order }
+            }),
+            prisma.records.count({ where: whereFilter })
+        ])
 
+        const formattedHistory = historyData.map(record => ({
+            status: record.status,
+            updatedAt: record.updatedAt,
+            fullName: `${record.firstName} ${record.lastName}`
+        }))
 
-		return res.status(200).send(userData.history)
-	} catch(err) {
-		console.log(err)
-		return res.status(500).send({ message: 'Error getting user history' })
-	}
+        return res.status(200).send({
+            formattedHistory,
+            total: totalCount 
+        })
+
+    } catch (err) {
+        console.error(err)
+        return res.status(500).send({ message: 'Error getting user history' })
+    }
 }
