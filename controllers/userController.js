@@ -95,8 +95,12 @@ module.exports.changePassword = async (req, res) => {
 		})
 
 		if(!bcrypt.compareSync(req.body.oldPassword, user.password)) {
-			return res.status(400).send({ error: 'Current password Incorrect' })
+			return res.status(400).send({ error: 'Current password incorrect' })
 		}
+
+        if (bcrypt.compareSync(req.body.newPassword, user.password)) {
+            return res.status(400).send({ error: 'New password cannot be the same as your current password' })
+        }
 
 		// password should contain a string and atleast one symbol and number
 		const passwordHasNumber = /\d/;
