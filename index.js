@@ -18,6 +18,10 @@ app.use(express.urlencoded({extended:true}))
 app.use('/users', userRoutes)
 app.use('/records', recordRoutes)
 
+const PORT = process.env.PORT || 4000
+
 if(require.main === module) {
-	app.listen(process.env.PORT || 4000, () => console.log(`API is now online on port ${PORT}`))
+	app.listen(PORT, () => console.log(`API is now online on port ${PORT}`))
 }
+
+module.exports = app
