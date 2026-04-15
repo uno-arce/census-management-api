@@ -1,4 +1,4 @@
-An API that features a collection of barangay inhabitant information. Admins can update and add new inhabitants using the prescribed census form format. Additional features such as searching, filtering, and sorting is added for accessibilty of data. Lastly, a history feature to audit logs. Uses Prisma for object data modeling and Supabase as SQL database.
+An API that features a collection of barangay inhabitant information. Uses Prisma for object data modeling and Supabase as SQL database. Admins can update and add new inhabitants using the prescribed census form format. Additional features such as searching, filtering, and sorting is added for accessibilty of data. Lastly, a history feature to audit logs.
 
 ## Functionalities
 **Key Functionalities**
